@@ -1,7 +1,6 @@
-// Public project configuration only. NEVER add a service-role key or a secret here.
+// Public frontend settings. The publishable key is not a secret; never add a service-role key.
 window.AZ_SAHAR_CONFIG = {
-  supabaseUrl: '',
-  supabasePublishableKey: '',
-  // With the backend deployed, specify your own function URL (e.g. https://...supabase.co/functions/v1/az-sahar-game)
-  apiUrl: ''
+  supabaseUrl: 'https://brjvnwsilfdrmbgsnoqs.supabase.co',
+  supabasePublishableKey: 'sb_publishable_CPO0UzT-um2pgiVb-66IHw_GCrwkAE-',
+  apiUrl: 'https://brjvnwsilfdrmbgsnoqs.supabase.co/functions/v1/az-sahar-game'
 };
