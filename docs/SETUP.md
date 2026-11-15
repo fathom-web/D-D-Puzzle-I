@@ -1,16 +1,16 @@
 # Backend instellen — Supabase (live multiplayer)
 
-**Status: configuratiebeschrijving. De uitvoering en echte multiplayer-E2E-controle staan open.**
+**Status: Supabase-project, database, Edge Function en GitHub Pages zijn actief. De live backend-E2E met vijf rollen is geslaagd. Een fysieke test op iPhone/Android met eigen oordopjes blijft aanbevolen.**
 
 ## A. Nieuw, afzonderlijk project
 
-Maak een eigen Supabase-project **Novus Ordo Mundi** aan in de organisatie die de eigenaar expliciet kiest. Meng de speldatabase niet met bestaande systemen voor StudyForge of sv Diemen. Controleer het actuele kostenoverzicht en accountbeperkingen vóór het maken.
+**Reeds aangemaakt:** Supabase-project **Novus Ordo Mundi**, referentie `brjvnwsilfdrmbgsnoqs`, in de organisatie van fathom-web. Het project staat los van StudyForge en sv Diemen.
 
-Regio: `eu-west-1` is logisch voor een groep in Nederland. Kies dit alleen bij projectcreatie als de gebruiker akkoord is.
+**Gekozen regio:** `eu-west-1` (Europa).
 
 ## B. Database
 
-Voer de SQL uit `supabase/migrations/20261115172000_az_sahar_temple.sql` uit via een migration tool of Supabase SQL Editor, of pas hem toe als geregistreerde migratie. De tabellen `public.nom_az_sessions` en `public.nom_az_members` krijgen RLS zonder clientbeleid, zodat alléén serverfuncties met geheime sleutel erbij kunnen.
+**Al toegepast:** `supabase/migrations/20261115172000_az_sahar_temple.sql`. Voor een nieuwe omgeving kan dezelfde migratie worden uitgevoerd. De tabellen `public.nom_az_sessions` en `public.nom_az_members` krijgen RLS zonder clientbeleid, zodat alléén serverfuncties met geheime sleutel erbij kunnen.
 
 De trigger gebruikt `realtime.send()` om **uitsluitend revisienummers** als publieke realtime-broadcasts te versturen. Deze events bevatten geen persoonsgegevens of geheime roldata. Als broadcasts niet werken, valt de client terug op periodiek ophalen van de status.
 
@@ -22,7 +22,7 @@ De runtime in `backend/index.ts` gebruikt een service-role (of nieuwe secret) se
 - `backend/engine.js` → `engine.js`
 - `backend/deno.json` → `deno.json`
 
-De function moet worden geconfigureerd met **verify_jwt=false** omdat de functie per sessie zijn eigen veilige capability-tokencontrole uitvoert. Dit is geen algemene permissie om gameacties ongeauthenticeerd uit te voeren: alleen `create` is zonder token toegestaan, met een limiet per IP. Andere acties eisen een token van de DM of de juiste rol.
+De function is uitgerold als `az-sahar-game`, met **verify_jwt=false** omdat de functie per sessie zijn eigen veilige capability-tokencontrole uitvoert. Dit is geen algemene permissie om gameacties ongeauthenticeerd uit te voeren: alleen `create` is zonder token toegestaan, met een limiet per IP. Andere acties eisen een token van de DM of de juiste rol.
 
 De server verwacht bestaande door Supabase beheerde omgevingvariabelen `SUPABASE_URL` en `SUPABASE_SERVICE_ROLE_KEY` (of `SUPABASE_SECRET_KEY`). **Nooit secretkeys in de GitHub-repository of `src/config.js` opnemen.**
 
@@ -30,7 +30,7 @@ Configureer waar nodig `AZ_SAHAR_ALLOWED_ORIGINS` als komma-gescheiden lijst. St
 
 ## D. Public frontend configureren
 
-Na deployment kun je de volgende **publieke** waarden invullen in `src/config.js`:
+De onderstaande publieke configuratie is **reeds ingevuld** in `src/config.js`. Bij migratie naar een ander Supabase-project moeten deze waarden worden vervangen:
 
 ```js
 window.AZ_SAHAR_CONFIG = {
@@ -42,9 +42,9 @@ window.AZ_SAHAR_CONFIG = {
 
 **Plak uitsluitend een publishable key.** Het is expliciet veilig dat die publiek in browsercode staat. De secret key hoort uitsluitend in Supabase Edge Function secrets.
 
-Publiceer de gewijzigde `src/config.js` daarna op GitHub Pages.
+De gewijzigde `src/config.js` is al via GitHub Pages gepubliceerd.
 
-## E. Live testen (verplicht voor de game-avond)
+## E. Live testen (backend geslaagd; fysieke apparaatcheck nog doen)
 
 1. Maak vanaf de live website één sessie aan.
 2. Open elk van de vijf spelerslinks op **verschillende apparaten**.
@@ -57,7 +57,7 @@ Publiceer de gewijzigde `src/config.js` daarna op GitHub Pages.
 
 ## F. Beperkingen die bewust gemeld moeten blijven
 
-- De demo is géén internetmultiplayer.
+- De publieke website is nu gekoppeld aan de live server en ondersteunt echte internetmultiplayer. De lokale browserdemo kan nog apart worden gebruikt als testsituatie.
 - De live Edge Function heeft een publieke sessieaanmaakroute met een eenvoudige rate limit; harde abuse-limits kunnen aanvullende infrastructuur vereisen.
 - Een persoon die een rolgebonden link krijgt, kan die doorsturen; linkbezit geeft roltoegang.
 - De broncode is publiek, dus een technisch vaardige speler kan de statische voorbeeldoplossingen inspecteren.
