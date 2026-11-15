@@ -13,7 +13,7 @@ def inline():
  html=(b/'index.html').read_text();engine=(b/'src/engine.js').read_bytes();app=(b/'src/app.js').read_text()
  app=app.replace("'./engine.js'","'data:text/javascript;base64,"+base64.b64encode(engine).decode()+"'")
  html=html.replace('<link rel="stylesheet" href="./src/styles.css">','<style>'+(b/'src/styles.css').read_text()+'</style>')
- html=html.replace('<script src="./src/config.js"></script>','<script>'+(b/'src/config.js').read_text()+'</script>')
+ html=html.replace('<script src="./src/config.js"></script>','<script>window.AZ_SAHAR_CONFIG={};</script>')
  html=html.replace('<script type="module" src="./src/app.js"></script>','<script type="module">'+app+'</script>')
  html=html.replace('<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">','')
  return html
