@@ -1,0 +1,20 @@
+name: Az-Sahar Live Multiplayer Test
+on:
+  push:
+    paths:
+      - 'tests/live_backend.test.mjs'
+      - '.github/workflows/az-sahar-live-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test dedicated Supabase backend (five roles)
+        run: node tests/live_backend.test.mjs
