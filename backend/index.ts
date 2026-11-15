@@ -51,11 +51,21 @@ Deno.serve(async (req:Request)=>{
   if(body.action==='act'){
     if(actor==='screen')throw error('Dit presentatiescherm heeft alleen leesrechten.',403);
     const type=String(body.type||'');const payload=body.payload||{};
-    const next=transition(row.state,actor,type,payload);
-    const {data:updated,error:updateErr}=await supabase.from('nom_az_sessions').update({state:next,revision:next.revision,updated_at:new Date().toISOString()}).eq('id',id).eq('revision',row.revision).select('id').maybeSingle();
-    if(updateErr)throw error('Actie kan niet worden opgeslagen.',503);
-    if(!updated)throw error('De kamer is intussen veranderd. Herlaad je signaal en probeer opnieuw.',409);
-    return reply(req,200,{state:viewFor(next,actor)});
+    // Retrying compare-and-set actions prevents simultaneous players from losing clicks.
+    let latest=row;
+    for(let retry=0;retry<7;retry++){
+      const next=transition(latest.state,actor,type,payload);
+      const {data:updated,error:updateErr}=await supabase.from('nom_az_sessions')
+        .update({state:next,revision:next.revision,updated_at:new Date().toISOString()})
+        .eq('id',id).eq('revision',latest.revision).select('id').maybeSingle();
+      if(updateErr)throw error('Actie kan niet worden opgeslagen.',503);
+      if(updated)return reply(req,200,{state:viewFor(next,actor)});
+      const {data:refreshed,error:refreshErr}=await supabase.from('nom_az_sessions')
+        .select('id,state,revision,dm_token_hash').eq('id',id).maybeSingle();
+      if(refreshErr||!refreshed)throw error('Nieuwe spelstatus ophalen mislukt.',503);
+      latest=refreshed;
+    }
+    throw error('De tempel is druk. Probeer nogmaals.',409);
   }
   throw error('Onbekende actie.');
  }catch(e){const x=e as {message?:string,code?:number};console.error('Temple request failed:',x.message);return reply(req,typeof x.code==='number'?x.code:400,{error:x.message||'Er ging iets mis.'})}
