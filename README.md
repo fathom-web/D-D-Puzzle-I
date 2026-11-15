@@ -1,70 +1,68 @@
 # Novus Ordo Mundi — De Stilte van Az-Sahar
 
-Een interactieve desert-fantasy D&D-tempelproef voor vijf spelers en één Dungeon Master.
+Een multiplayer D&D-tempelproef voor vijf helden, één Dungeon Master en één extra presentatiescherm.
 
-## Huidige status
+## Live status
 
-**De visuele game en de lokale browserdemo zijn geïmplementeerd en getest. De live backend is nog niet gekoppeld.**
+- **Website:** https://fathom-web.github.io/D-D-Puzzle-I/
+- **Backend:** apart Supabase-project **Novus Ordo Mundi** in `eu-west-1` (`brjvnwsilfdrmbgsnoqs`).
+- **Edge Function:** `az-sahar-game`, actief en verbonden met de publieke frontend.
+- **Database:** `nom_az_sessions` en `nom_az_members`, RLS ingeschakeld, geen rechtstreekse anonieme toegang.
+- **Integratietest:** geslaagd met vijf spelersrollen, zes signaaloverdrachten, vijf gelijktijdige zegels, DM-onthulling, rolfilters en controle op verboden databasetoegang.
+- **Fysieke iPhone-/Android-test:** nog door de spelers uit te voeren voor de D&D-avond.
 
-In de lokale demo werken de vijf verschillende kamers, puzzelmechaniek, geluidspulsen, de DM-besturing, noodhulp, het grote scherm en de afsluitende Testament-scène. De demo deelt status via `localStorage` en `BroadcastChannel` tussen **tabbladen binnen dezelfde browser**, en **werkt niet als echte multiplayer over vijf telefoons**. Dit is bewust aangegeven op de website.
+## Start een spel
 
-De repository bevat daarnaast een backendimplementatie voor Supabase Edge Functions, een database-migratie en de configuratie-instructies. Deze zijn **nog niet op een afzonderlijk Supabase-project uitgerold**. Ze zijn ook niet end-to-end in een echte Supabase-omgeving getest.
+1. Open de website op de DM-laptop.
+2. Kies **Creëer een speelsessie**; de DM krijgt een geheime sessielink.
+3. Kopieer via de DM-tafel een unieke URL naar elk van de vijf spelers: Quasar, Gnarly, Kagen, Bryndis en Vespera.
+4. Open de URL van **Groot scherm** op het extra HDMI-scherm.
+5. Laat iedereen zijn audio testen en gebruik zo nodig oordopjes.
+6. De DM begint met **Sluit de vijf deuren**.
+7. Iedere speler activeert zijn eigen resonantiesteen; vervolgens reizen zes signalen door de vijf kamers.
+8. De vijf spelers activeren het Vijfvoudige Zegel. De deuren openen.
+9. Het fysieke D&D-gevecht vindt plaats **buiten de applicatie**.
+10. Alleen daarna activeert de DM de afzonderlijke Testament-scène.
 
-## Openen
+Een spelerlink geeft toegang tot één specifieke kamer; behandel deze link als privé. Deel nooit de DM-link.
 
-- [Website — GitHub Pages](https://fathom-web.github.io/D-D-Puzzle-I/)
-- Open `index.html` in een webserver. Met `npm run serve` is de lokale site op `http://localhost:8000` beschikbaar.
-- Kies **Start lokale demo** voor het DM-scherm. Kopieer de vijf unieke spelerslinks naar andere tabbladen van dezelfde browser.
-- Geef iedere speler alleen zijn eigen link; de presentatielink hoort op het extra scherm.
-- De offline demo is niet beveiligd als echte DM-sessie en is alleen voor testen.
+## Architectuur
 
-## Volgorde van de game
-
-1. DM maakt een sessie en start de proef.
-2. Iedere speler wekt zijn persoonlijke steen in een unieke kamer.
-3. Zes opeenvolgende signaaloverdrachten tussen de vijf kamers; Quasar speelt twee keer.
-4. Alle vijf zegels activeren binnen één tijdvenster van twintig seconden.
-5. Poorten gaan open. Nu volgt **het fysieke D&D-gevecht**, niet in de app.
-6. DM activeert de afzonderlijke Testament-onthulling nadat het gevecht is afgerond.
-
-## Projectstructuur
-
-- `index.html`, `favicon.svg` — statische entrypoint
-- `src/styles.css` — desert-fantasy interface
-- `src/app.js` — UI, audio en transports
-- `src/engine.js` — deterministische puzzelregels en rolgefilterde schermdata
-- `src/config.js` — **uitsluitend publieke configuratie**, nu leeg
-- `backend/index.ts` en `backend/engine.js` — Supabase Edge Function, validatie met een per-sessie capability-token
-- `supabase/migrations/...sql` — afgeschermde speltabellen, realtime update-notificaties
-- `tests/engine.test.mjs` — unit tests voor puzzelregels
-- `tests/browser_qa.py` — Chromium UI smoke test; geen echte multiplayer-netwerktest
-- `docs/SETUP.md` — backendconfiguratie
-- `docs/ARCHITECTURE.md` — ontwerpkeuzes en beperkingen
+- `index.html`, `favicon.svg`: statische website voor GitHub Pages.
+- `src/styles.css`: zandsteen- en goudthema.
+- `src/app.js`: vijf ruimtes, DM-dashboard, cinema, audio, realtime notificaties en fallback-polling.
+- `src/config.js`: uitsluitend de **publieke** Supabase URL, publishable key en functie-URL.
+- `src/engine.js`: gedeelde spelregels en zichtbare rolfilters; de server is leidend.
+- `backend/index.ts`, `backend/engine.js`, `backend/deno.json`: beveiligde serverkant met willekeurige rol- en DM-tokens.
+- `supabase/migrations/`: database + minimale realtime-broadcasts met uitsluitend revisienummers.
+- `docs/ARCHITECTURE.md` en `docs/SETUP.md`: ontwerp en beheer.
+- `tests/engine.test.mjs`: offline unit tests.
+- `tests/live_backend.test.mjs`: netwerk-E2E met de daadwerkelijke Supabase-projectserver.
+- `tests/live_browser.test.js`: test van de gepubliceerde website met vijf afzonderlijke mobiele browserclients, DM en bioscoopscherm.
+- `tests/browser_qa.py`: optionele lokale browser-demo-test.
 
 ## Testen
 
 ```sh
 npm test
-# Voor lokale preview
-npm run serve
+npm run test:live
 ```
 
-Optioneel: met geïnstalleerde Python Playwright en Chromium kun je `python tests/browser_qa.py` uitvoeren. Deze smoketest inline de bronnen vanwege de beperkte netwerktoegang in de testomgeving. Ze valideert wel de UI-stroom maar **niet** Supabase of iOS.
+De live GitHub Actions-workflows worden uitgevoerd wanneer hun respectievelijke testbestanden worden bijgewerkt of handmatig vanuit GitHub Actions worden gestart.
 
-## Backendsamenwerking
+## Beveiliging en beperkingen
 
-De echte multiplayer is ontworpen rond een speciale Supabase-projectdatabase. **Gebruik hiervoor geen bestaande sv Diemen- of StudyForge-database.** Zie [docs/SETUP.md](docs/SETUP.md).
-
-## Security
-
-- De live Edge Function controleert rollen via willekeurige 256-bit tokens, niet via `?dm=1`.
-- Tokens staan alleen in URL-fragmenten en worden als SHA-256 hashes in de database opgeslagen.
-- Alle database-tabellen hebben RLS aan en staan niet direct open voor anonieme clients.
-- Het publiek realtimekanaal verstuurt alleen een niet-gevoelige `revision`-waarde; persoonlijke game-informatie wordt via de Edge Function opgevraagd.
-- Dezelfde spelerlink kan door een ander worden gebruikt als de ontvanger de URL doorstuurt. Tokens zijn dus vertrouwelijk.
-- De spelmechaniek zit in een **publieke repository**. Vastberaden spelers kunnen broncode lezen. Niet gebruiken voor echte persoonlijke geheimen.
-- Nog nodig vóór livegang: deployed backend, controle van databasebeveiliging en echte zes-apparaten-test.
+- De spelstatus wordt uitsluitend op de server gewijzigd. De Edge Function controleert elke actie en roltoegang.
+- RLS weigert rechtstreekse toegang tot de databasetabellen vanuit gewone browsers.
+- Browserclients zien niet de volledige oplossing of andere privérolgegevens uit serverstatus.
+- Alleen de publieke revisienummers worden via een openbaar realtimekanaal verspreid. Een mislukte realtimeverbinding schakelt over op statuscontroles.
+- **Er bestaat geen gebruikersaccount voor de DM.** Een niet te raden persoonlijke DM-link is de toegangssleutel. Wie die link ontvangt, kan ook de DM-besturing gebruiken.
+- De spelmechaniek is in een publieke GitHub-repository in te zien. Dit is een hobby-escape room, geen opslagplaats voor echte geheimen.
+- De sessieaanmaak kent een eenvoudige limiet; dit is geen volwaardig antimisbruiksysteem.
+- De game is ontworpen om op smartphones te werken, maar echte mobiele Safari-/Android-handmatige tests en audioafstemming blijven nodig.
 
 ## Canon
 
-De Vergeten Tempel is een **nieuw campagnevoorstel**, niet de bevestigde biologische geboorteplaats van Quasar. Az-Sahar, Meester Azim en de vier oerkrachten volgen de Canon Bible 8.2. De canonieke Eerste Diepte onder de Heilige Bron blijft een afzonderlijk mysterie. Het Testament is een kennisboek en geen sleutel of verplichte keten van vijf sleutels.
+Deze Vergeten Tempel is een **nieuw campagnevoorstel** en bevestigt niet Quasars biologische geboorteplaats. De Eerste Diepte onder de Heilige Bron blijft een apart canoniek mysterie. De vier oerkrachten zijn Aether, Vitae, Umbra en Ruin. Het Testament is een kennisboek, geen sleutel of verplichte vijf-sleuteljacht.
+
+**DM-spoilers:** houd de volledige DM-handleiding buiten deze openbare repository.
