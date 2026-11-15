@@ -57,7 +57,7 @@ for(const [role,pattern] of chain){
 }
 seen=await request('get',auth('quasar'));
 assert.equal(seen.state.phase,'seal');
-for(const role of roles)await act(role,'seal');
+await Promise.all(roles.map(role=>act(role,'seal'))); // Verify simultaneous clients can complete the 20-second ritual
 seen=await request('get',auth('screen'));
 assert.equal(seen.state.phase,'escaped');
 assert.equal(seen.state.revealText,undefined);
